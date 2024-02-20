@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">FlickNest</string>
+    <string name="image_todo">TODO</string>
+    <string name="discover">Discover</string>
+</resources>
