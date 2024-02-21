@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.girendi.flicknest.databinding.ActivitySplashBinding
+import com.girendi.flicknest.presentation.genres.GenresActivity
 
 @SuppressLint("CustomSplashScreen")
 class SplashActivity: AppCompatActivity() {
