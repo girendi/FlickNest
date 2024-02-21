@@ -2,4 +2,7 @@
     <string name="app_name">FlickNest</string>
     <string name="image_todo">TODO</string>
     <string name="discover">Discover</string>
+    <string name="play_trailer">Play Trailer</string>
+    <string name="overview">Overview</string>
+    <string name="review">Review</string>
 </resources>
