@@ -1,6 +1,6 @@
 package com.girendi.flicknest.data.response
 
-import com.girendi.flicknest.data.models.Review
+import com.girendi.flicknest.data.model.Review
 import com.google.gson.annotations.SerializedName
 
 class ListReviewResponse(

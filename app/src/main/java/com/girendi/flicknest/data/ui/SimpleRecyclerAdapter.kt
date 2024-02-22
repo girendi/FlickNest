@@ -26,7 +26,7 @@ class SimpleRecyclerAdapter<T: Any>(
     }
 
     override fun onBindViewHolder(
-        holder: SimpleRecyclerAdapter<T>.SimpleViewHolder,
+        holder: SimpleViewHolder,
         position: Int
     ) {
         val item = listItem[position]
@@ -42,6 +42,9 @@ class SimpleRecyclerAdapter<T: Any>(
         this.listItem = list
         notifyDataSetChanged()
     }
+
+    val mainData: List<T>
+        get() = this.listItem
 
     inner class SimpleViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         fun bind(item: T) {

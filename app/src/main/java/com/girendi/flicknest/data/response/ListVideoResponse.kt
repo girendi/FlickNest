@@ -1,6 +1,6 @@
 package com.girendi.flicknest.data.response
 
-import com.girendi.flicknest.data.models.Video
+import com.girendi.flicknest.data.model.Video
 import com.google.gson.annotations.SerializedName
 
 class ListVideoResponse(

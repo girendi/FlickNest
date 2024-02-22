@@ -1,4 +1,4 @@
-package com.girendi.flicknest.data.models
+package com.girendi.flicknest.data.model
 
 import android.os.Parcelable
 import com.google.gson.annotations.SerializedName

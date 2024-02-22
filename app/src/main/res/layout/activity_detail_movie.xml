@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/background_image">
@@ -22,6 +22,7 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
+        android:layout_below="@id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -94,25 +95,30 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cvTrailer"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 app:cardElevation="4dp"
                 app:cardCornerRadius="10dp"
-                app:cardBackgroundColor="@color/color_transparent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/imageView">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/white"
-                    android:layout_gravity="center"
-                    android:text="@string/play_trailer"
-                    app:drawableStartCompat="@drawable/ic_arrow_right_white" />
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:background="@color/color_151d3e"
+                    android:padding="12dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/white"
+                        android:layout_gravity="center"
+                        android:text="@string/play_trailer"
+                        app:drawableStartCompat="@drawable/ic_arrow_right_white" />
+                </LinearLayout>
 
             </androidx.cardview.widget.CardView>
 
@@ -170,8 +176,19 @@
                         android:id="@+id/rvListReview"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        tools:visibility="gone"
                         tools:itemCount="3"
                         tools:listitem="@layout/item_list_review" />
+
+                    <TextView
+                        android:id="@+id/tvEmpty"
+                        android:text="@string/no_review_yet"
+                        android:textColor="@color/white"
+                        android:layout_gravity="center"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
 
                 </LinearLayout>
 
@@ -181,4 +198,10 @@
 
     </androidx.core.widget.NestedScrollView>
 
-</LinearLayout>
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"/>
+
+</RelativeLayout>

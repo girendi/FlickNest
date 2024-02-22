@@ -1,6 +1,6 @@
 package com.girendi.flicknest.data.response
 
-import com.girendi.flicknest.data.models.Genre
+import com.girendi.flicknest.data.model.Genre
 import com.google.gson.annotations.SerializedName
 
 data class ListGenresResponse (

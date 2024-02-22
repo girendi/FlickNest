@@ -3,26 +3,29 @@ package com.girendi.flicknest.presentation.movie
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.viewModels
+import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.girendi.flicknest.R
-import com.girendi.flicknest.data.models.Genre
-import com.girendi.flicknest.data.models.Movie
+import com.girendi.flicknest.data.model.Genre
+import com.girendi.flicknest.data.model.Movie
 import com.girendi.flicknest.data.ui.SimpleRecyclerAdapter
 import com.girendi.flicknest.databinding.ActivityListMovieBinding
 import com.girendi.flicknest.databinding.ItemListMovieBinding
+import com.girendi.flicknest.domain.UiState
 import com.girendi.flicknest.presentation.detail.DetailMovieActivity
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import kotlin.math.round
 
 class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
 
     private lateinit var binding: ActivityListMovieBinding
     private lateinit var adapterMovie: SimpleRecyclerAdapter<Movie>
-    private val viewModel by viewModels<ListMovieViewModel>()
+    private val movieViewModel: ListMovieViewModel by viewModel()
     private var genre: Genre? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,11 +45,24 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
     }
 
     private fun observeViewModel() {
-        viewModel.listMovie.observe(this) {
-            binding.swipeRefreshLayout.isRefreshing = false
-            adapterMovie.setListItem(it)
+        movieViewModel.uiState.observe(this) { state ->
+            handleUiState(state)
         }
-        viewModel.resetGetListMovie(genre?.id.toString())
+        movieViewModel.listMovie.observe(this) { movie ->
+            adapterMovie.setListItem(movie)
+        }
+        movieViewModel.fetchMovieByGenre(genre?.id.toString())
+    }
+
+    private fun handleUiState(state: UiState) {
+        when (state) {
+            is UiState.Loading -> showLoading(true)
+            is UiState.Success -> showLoading(false)
+            is UiState.Error -> {
+                showLoading(false)
+                showError(state.message)
+            }
+        }
     }
 
     private fun setupRecyclerView() {
@@ -57,9 +73,9 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
                 val itemBinding = ItemListMovieBinding.bind(view)
                 itemBinding.tvTitle.text = item.title
                 itemBinding.tvVote.text = item.voteAverage?.let { round(it).toString() }
-                itemBinding.tvDateTime.text = item.releaseDate?.let { viewModel.changeDateFormat(it) }
+                itemBinding.tvDateTime.text = item.releaseDate?.let { movieViewModel.changeDateFormat(it) }
                 Glide.with(this)
-                    .load(item.posterPath?.let { viewModel.getPathImage(it) })
+                    .load(item.posterPath?.let { movieViewModel.getPathImage(it) })
                     .into(itemBinding.imageView)
                 itemBinding.root.setOnClickListener {
                     val intent = Intent(applicationContext, DetailMovieActivity::class.java)
@@ -77,14 +93,8 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
             object :RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    val visibleThreshold = 5
-                    val layoutManager: LinearLayoutManager =
-                        binding.rvListMovie.layoutManager as LinearLayoutManager
-                    val lastItemVisible = layoutManager.findLastCompletelyVisibleItemPosition()
-                    val currentTotalCount = layoutManager.itemCount
-                    if ((currentTotalCount <= (lastItemVisible + visibleThreshold)) && !binding.swipeRefreshLayout.isRefreshing) {
-                        binding.swipeRefreshLayout.isRefreshing = true
-                        viewModel.getListMovie(genre?.id.toString())
+                    if (!binding.rvListMovie.canScrollVertically(1)) {
+                        movieViewModel.fetchMovieByGenre(genre?.id.toString())
                     }
                 }
             }
@@ -99,12 +109,20 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
         }
     }
 
+    private fun showLoading(isLoading: Boolean) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.swipeRefreshLayout.isRefreshing = isLoading
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
     companion object {
         const val EXTRA_GENRE = "extra_genre"
     }
 
     override fun onRefresh() {
-        binding.swipeRefreshLayout.isRefreshing = true
-        viewModel.resetGetListMovie(genre?.id.toString())
+        movieViewModel.fetchMovieByGenre(genre?.id.toString())
     }
 }
