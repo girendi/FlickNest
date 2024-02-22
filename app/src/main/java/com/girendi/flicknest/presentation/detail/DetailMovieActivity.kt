@@ -81,11 +81,13 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
             when(result) {
                 is Result.Success -> {
                     showLoading(false)
+                    handleViewContent("", false)
                     showMovieDetail(result.data)
                 }
                 is Result.Error -> {
                     showLoading(false)
-                    showError(result.exception.message ?: "An error occurred")
+                    supportActionBar?.title = resources.getString(R.string.something_went_wrong)
+                    handleViewContent(result.exception.message ?: "An error occurred", true)
                 }
                 is Result.Loading -> {
                     showLoading(true)
@@ -123,6 +125,12 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
             viewModelMovie.fetchMovieDetail(it)
             viewModelMovie.fetchMovieReviews(it)
         }
+    }
+
+    private fun handleViewContent(message: String, status: Boolean) {
+        binding.errorMessage.text = message
+        binding.contentView.visibility = if (status) View.GONE else View.VISIBLE
+        binding.contentError.visibility = if (status) View.VISIBLE else View.GONE
     }
 
     private fun handleEmptyResult(empty: Boolean) {

@@ -4,7 +4,6 @@ package com.girendi.flicknest.presentation.movie
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -57,12 +56,21 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
     private fun handleUiState(state: UiState) {
         when (state) {
             is UiState.Loading -> showLoading(true)
-            is UiState.Success -> showLoading(false)
+            is UiState.Success -> {
+                showLoading(false)
+                handleViewContent("", false)
+            }
             is UiState.Error -> {
                 showLoading(false)
-                showError(state.message)
+                handleViewContent(state.message, true)
             }
         }
+    }
+
+    private fun handleViewContent(message: String, status: Boolean) {
+        binding.errorMessage.text = message
+        binding.rvListMovie.visibility = if (status) View.GONE else View.VISIBLE
+        binding.contentError.visibility = if (status) View.VISIBLE else View.GONE
     }
 
     private fun setupRecyclerView() {
@@ -112,10 +120,6 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
     private fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         binding.swipeRefreshLayout.isRefreshing = isLoading
-    }
-
-    private fun showError(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
     companion object {
