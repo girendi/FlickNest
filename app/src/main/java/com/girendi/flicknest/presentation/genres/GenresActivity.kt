@@ -3,7 +3,6 @@ package com.girendi.flicknest.presentation.genres
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.girendi.flicknest.R
@@ -35,17 +34,24 @@ class GenresActivity: AppCompatActivity() {
             when (result) {
                 is Result.Success -> {
                     showLoading(false)
+                    handleViewContent("", false)
                     adapterGenre.setListItem(result.data)
                 }
                 is Result.Error -> {
                     showLoading(false)
-                    showError(result.exception.message ?: "An error occurred")
+                    handleViewContent(result.exception.message ?: "An error occurred", true)
                 }
                 is Result.Loading -> {
                     showLoading(true)
                 }
             }
         }
+    }
+
+    private fun handleViewContent(message: String, status: Boolean) {
+        binding.errorMessage.text = message
+        binding.rvListGenres.visibility = if (status) View.GONE else View.VISIBLE
+        binding.contentError.visibility = if (status) View.VISIBLE else View.GONE
     }
 
     private fun setupRecyclerView() {
@@ -70,10 +76,6 @@ class GenresActivity: AppCompatActivity() {
 
     private fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-    }
-
-    private fun showError(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
 }

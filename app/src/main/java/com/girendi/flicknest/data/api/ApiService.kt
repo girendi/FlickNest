@@ -1,10 +1,7 @@
 package com.girendi.flicknest.data.api
 
 import com.girendi.flicknest.data.model.Movie
-import com.girendi.flicknest.data.response.ListGenresResponse
-import com.girendi.flicknest.data.response.ListMovieResponse
-import com.girendi.flicknest.data.response.ListReviewResponse
-import com.girendi.flicknest.data.response.ListVideoResponse
+import com.girendi.flicknest.data.response.*
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
