@@ -1,99 +1,73 @@
 package com.girendi.flicknest.presentation.detail
 
-import android.app.Application
-import android.util.Log
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.girendi.flicknest.data.models.Movie
-import com.girendi.flicknest.data.models.Review
-import com.girendi.flicknest.data.api.ApiConfig
-import com.girendi.flicknest.data.models.Video
-import com.girendi.flicknest.data.response.ListReviewResponse
-import com.girendi.flicknest.data.response.ListVideoResponse
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.girendi.flicknest.data.model.Movie
+import com.girendi.flicknest.data.model.Review
+import com.girendi.flicknest.data.model.Video
+import com.girendi.flicknest.domain.Result
+import com.girendi.flicknest.domain.UiState
+import com.girendi.flicknest.domain.usecase.FetchDetailMovieUseCase
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-class DetailMovieViewModel(application: Application) : AndroidViewModel(application) {
-    private val _movie = MutableLiveData<Movie>()
-    val movie: LiveData<Movie> = _movie
+class DetailMovieViewModel(private val fetchDetailMovieUseCase: FetchDetailMovieUseCase) : ViewModel() {
+
+    private val _uiState = MutableLiveData<UiState>()
+    val uiState: LiveData<UiState> = _uiState
+
+    private val _resultMovie = MutableLiveData<Result<Movie>>()
+    val resultMovie: LiveData<Result<Movie>> = _resultMovie
 
     private val _listReview = MutableLiveData<List<Review>>()
     val listReview: LiveData<List<Review>> = _listReview
 
-    private val _listVideo = MutableLiveData<List<Video>>()
-    val listVideo: LiveData<List<Video>> = _listVideo
+    private val _resultVideos = MutableLiveData<Result<List<Video>>>()
+    val resultVideos: LiveData<Result<List<Video>>> = _resultVideos
 
-    private var page = 1
+    private var currentPage = 1
+    private var isLastPage = false
 
-    fun getDetailMovie(id: Int) {
-        ApiConfig.provideApiService().getMovieDetails(id).enqueue(
-            object : Callback<Movie> {
-                override fun onResponse(
-                    call: Call<Movie>,
-                    response: Response<Movie>
-                ) {
-                    if (response.isSuccessful) {
-                        _movie.postValue(response.body())
-                    }
-                }
-
-                override fun onFailure(call: Call<Movie>, t: Throwable) {
-                    t.message?.let { Log.d("Failure", it) }
-                }
-            }
-        )
+    fun fetchMovieDetail(movieId: Int) {
+        viewModelScope.launch {
+            _resultMovie.value = Result.Loading
+            _resultMovie.value = fetchDetailMovieUseCase.fetchMovieDetail(movieId)
+        }
     }
 
-    fun getListReview(movieId: Int) {
-        ApiConfig.provideApiService().getMovieReviews(movieId, page).enqueue(
-            object : Callback<ListReviewResponse> {
-                override fun onResponse(
-                    call: Call<ListReviewResponse>,
-                    response: Response<ListReviewResponse>
-                ) {
-                    if (response.isSuccessful) {
-                        val currentList = _listReview.value ?: emptyList()
-                        val reviews = response.body()?.listReview ?: listOf()
-                        _listReview.postValue(currentList + reviews)
-                        page++
-                    }
+    fun fetchMovieReviews(movieId: Int) {
+        if (isLastPage) {
+            _uiState.postValue(UiState.Success)
+            return
+        }
+        viewModelScope.launch {
+            when(val result = fetchDetailMovieUseCase.fetchMovieReviews(currentPage, movieId)) {
+                is Result.Success -> {
+                    val reviews = _listReview.value.orEmpty() + result.data
+                    _listReview.postValue(reviews)
+                    _uiState.postValue(UiState.Success)
+                    isLastPage = result.data.isEmpty()
+                    currentPage++
                 }
-
-                override fun onFailure(call: Call<ListReviewResponse>, t: Throwable) {
-                    t.message?.let { Log.d("Failure", it) }
+                is Result.Error -> {
+                    _uiState.value = UiState.Error(result.exception.message ?: "An unknown error occurred")
                 }
-            }
-        )
-    }
-
-    fun fetchMovieTrailers(movieId: Int) {
-        ApiConfig.provideApiService().fetchMovieTrailers(movieId).enqueue(
-            object : Callback<ListVideoResponse> {
-                override fun onResponse(call: Call<ListVideoResponse>, response: Response<ListVideoResponse>) {
-                    if (response.isSuccessful) {
-                        val trailers = response.body()?.listVideo?.filter {
-                            it.type == "Trailer"
-                        }
-                        _listVideo.postValue(trailers!!)
-                    }
-                }
-
-                override fun onFailure(call: Call<ListVideoResponse>, t: Throwable) {
-                    t.message?.let { Log.d("Failure", it) }
+                is Result.Loading -> {
+                    _uiState.value = UiState.Loading
                 }
             }
-        )
+        }
     }
 
-    fun resetGetListReview(movieId: Int) {
-        page = 1
-        _listReview.value = emptyList()
-        getListReview(movieId)
+    fun fetchMovieVideos(movieId: Int) {
+        viewModelScope.launch {
+            _resultVideos.value = Result.Loading
+            _resultVideos.value = fetchDetailMovieUseCase.fetchMovieVideos(movieId)
+        }
     }
 
     fun getPathImage(path: String): String = "https://image.tmdb.org/t/p/w500${path}"

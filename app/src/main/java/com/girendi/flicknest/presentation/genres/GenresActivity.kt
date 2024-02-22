@@ -2,21 +2,24 @@ package com.girendi.flicknest.presentation.genres
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.viewModels
+import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.girendi.flicknest.R
 import com.girendi.flicknest.data.ui.SimpleRecyclerAdapter
 import com.girendi.flicknest.databinding.ActivityGenresBinding
-import com.girendi.flicknest.data.models.Genre
+import com.girendi.flicknest.data.model.Genre
 import com.girendi.flicknest.databinding.ItemListGenresBinding
+import com.girendi.flicknest.domain.Result
 import com.girendi.flicknest.presentation.movie.ListMovieActivity
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class GenresActivity: AppCompatActivity() {
 
     private lateinit var binding: ActivityGenresBinding
     private lateinit var adapterGenre: SimpleRecyclerAdapter<Genre>
-    private val viewModel by viewModels<GenreViewModel>()
+    private val genreViewModel: GenreViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,10 +31,21 @@ class GenresActivity: AppCompatActivity() {
     }
 
     private fun observeViewModel() {
-        viewModel.listGenre.observe(this) {
-            adapterGenre.setListItem(it)
+        genreViewModel.listGenre.observe(this) { result ->
+            when (result) {
+                is Result.Success -> {
+                    showLoading(false)
+                    adapterGenre.setListItem(result.data)
+                }
+                is Result.Error -> {
+                    showLoading(false)
+                    showError(result.exception.message ?: "An error occurred")
+                }
+                is Result.Loading -> {
+                    showLoading(true)
+                }
+            }
         }
-        viewModel.getListGenre()
     }
 
     private fun setupRecyclerView() {
@@ -52,6 +66,14 @@ class GenresActivity: AppCompatActivity() {
             layoutManager = LinearLayoutManager(applicationContext)
             adapter = adapterGenre
         }
+    }
+
+    private fun showLoading(isLoading: Boolean) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
 }

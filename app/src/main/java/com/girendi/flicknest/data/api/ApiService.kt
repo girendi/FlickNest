@@ -1,38 +1,38 @@
 package com.girendi.flicknest.data.api
 
-import com.girendi.flicknest.data.models.Movie
+import com.girendi.flicknest.data.model.Movie
 import com.girendi.flicknest.data.response.ListGenresResponse
 import com.girendi.flicknest.data.response.ListMovieResponse
 import com.girendi.flicknest.data.response.ListReviewResponse
 import com.girendi.flicknest.data.response.ListVideoResponse
-import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
     @GET("genre/movie/list")
-    fun getList(): Call<ListGenresResponse>
+    suspend fun fetchMovieGenres(): Response<ListGenresResponse>
 
     @GET("discover/movie")
-    fun discoverMoviesByGenre(
-        @Query("with_genres") genreId: String,
-        @Query("page") page: Int
-    ): Call<ListMovieResponse>
+    suspend fun fetchMoviesByGenre(
+        @Query("page") page: Int,
+        @Query("with_genres") genreId: String
+    ): Response<ListMovieResponse>
 
     @GET("movie/{movie_id}")
-    fun getMovieDetails(
+    suspend fun fetchMovieDetail(
         @Path("movie_id") movieId: Int
-    ): Call<Movie>
+    ): Response<Movie>
 
     @GET("movie/{movie_id}/reviews")
-    fun getMovieReviews(
+    suspend fun fetchMovieReviews(
         @Path("movie_id") movieId: Int,
         @Query("page") page: Int
-    ): Call<ListReviewResponse>
+    ): Response<ListReviewResponse>
 
     @GET("movie/{movieId}/videos")
-    fun fetchMovieTrailers(
+    suspend fun fetchMovieVideos(
         @Path("movieId") movieId: Int
-    ): Call<ListVideoResponse>
+    ): Response<ListVideoResponse>
 }
