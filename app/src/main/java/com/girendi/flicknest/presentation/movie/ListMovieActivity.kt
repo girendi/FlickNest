@@ -26,6 +26,7 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
     private lateinit var adapterMovie: SimpleRecyclerAdapter<Movie>
     private val movieViewModel: ListMovieViewModel by viewModel()
     private var genre: Genre? = null
+    private var requestType: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +37,12 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         genre = intent.getParcelableExtra(EXTRA_GENRE)
-        supportActionBar?.title = genre?.name
+        requestType = intent.getStringExtra(EXTRA_REQUEST)
+        if (genre != null) {
+            supportActionBar?.title = genre?.name
+        } else {
+            supportActionBar?.title = requestType
+        }
 
         setupOnClick()
         setupRecyclerView()
@@ -50,7 +56,7 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
         movieViewModel.listMovie.observe(this) { movie ->
             adapterMovie.setListItem(movie)
         }
-        movieViewModel.fetchMovieByGenre(genre?.id.toString())
+        handleFetchData()
     }
 
     private fun handleUiState(state: UiState) {
@@ -63,6 +69,20 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
             is UiState.Error -> {
                 showLoading(false)
                 handleViewContent(state.message, true)
+            }
+        }
+    }
+
+    private fun handleFetchData() {
+        if (genre != null) {
+            movieViewModel.fetchMovieByGenre(genre?.id.toString())
+        }
+        if (requestType != null) {
+            if (requestType.equals(resources.getString(R.string.most_populars))) {
+                movieViewModel.fetchPopularBasedMovies()
+            }
+            else if (requestType.equals(resources.getString(R.string.trending))) {
+                movieViewModel.fetchTrendingBasedMovies()
             }
         }
     }
@@ -124,9 +144,10 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
 
     companion object {
         const val EXTRA_GENRE = "extra_genre"
+        const val EXTRA_REQUEST = "extra_request"
     }
 
     override fun onRefresh() {
-        movieViewModel.fetchMovieByGenre(genre?.id.toString())
+        handleFetchData()
     }
 }

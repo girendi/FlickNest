@@ -5,10 +5,12 @@ import com.girendi.flicknest.data.model.Review
 import com.girendi.flicknest.data.model.Video
 import com.girendi.flicknest.domain.Result
 
-interface MovieByGenreRepository{
+interface MovieRepository{
     suspend fun fetchMovieByGenre(page: Int, genreId: String): Result<List<Movie>>
     suspend fun fetchMovieDetail(movieId: Int): Result<Movie>
     suspend fun fetchMovieReviews(page: Int, movieId: Int): Result<List<Review>>
-
     suspend fun fetchMovieVideos(movieId: Int): Result<List<Video>>
+    suspend fun fetchPopularMovies(page: Int): Result<List<Movie>>
+    suspend fun fetchTrendingMovies(page: Int): Result<List<Movie>>
+    suspend fun fetchMostTrendingMovies(page: Int): Result<Movie>
 }

@@ -3,14 +3,16 @@ package com.girendi.flicknest.di
 import com.girendi.flicknest.BuildConfig
 import com.girendi.flicknest.data.api.ApiService
 import com.girendi.flicknest.data.repository.GenreRepositoryImpl
-import com.girendi.flicknest.data.repository.MovieByGenreRepositoryImpl
+import com.girendi.flicknest.data.repository.MovieRepositoryImpl
 import com.girendi.flicknest.domain.repository.GenreRepository
-import com.girendi.flicknest.domain.repository.MovieByGenreRepository
+import com.girendi.flicknest.domain.repository.MovieRepository
 import com.girendi.flicknest.domain.usecase.FetchDetailMovieUseCase
 import com.girendi.flicknest.domain.usecase.FetchGenreUseCase
 import com.girendi.flicknest.domain.usecase.FetchMovieByGenreUseCase
+import com.girendi.flicknest.domain.usecase.FetchMovieUseCase
 import com.girendi.flicknest.presentation.detail.DetailMovieViewModel
 import com.girendi.flicknest.presentation.genres.GenreViewModel
+import com.girendi.flicknest.presentation.home.HomeViewModel
 import com.girendi.flicknest.presentation.movie.ListMovieViewModel
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -53,14 +55,16 @@ val appModule = module {
     }
 
     single<GenreRepository> { GenreRepositoryImpl(api = get()) }
-    single<MovieByGenreRepository> { MovieByGenreRepositoryImpl(api = get()) }
+    single<MovieRepository> { MovieRepositoryImpl(api = get()) }
 
     factory { FetchGenreUseCase(genreRepository = get()) }
-    factory { FetchMovieByGenreUseCase(movieByGenreRepository = get()) }
-    factory { FetchDetailMovieUseCase(movieByGenreRepository = get()) }
+    factory { FetchMovieByGenreUseCase(movieRepository = get()) }
+    factory { FetchDetailMovieUseCase(movieRepository = get()) }
+    factory { FetchMovieUseCase(movieRepository = get()) }
 
     viewModel { GenreViewModel(fetchGenreUseCase = get()) }
     viewModel { ListMovieViewModel(fetchMovieByGenreUseCase = get()) }
     viewModel { DetailMovieViewModel(fetchDetailMovieUseCase = get()) }
+    viewModel { HomeViewModel(fetchMovieUseCase = get()) }
 
 }
