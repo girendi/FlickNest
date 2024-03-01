@@ -39,6 +39,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        dataBinding = true
         buildConfig = true
     }
 }
@@ -58,8 +59,9 @@ dependencies {
     implementation("io.insert-koin:koin-android:3.3.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
     implementation("com.jakewharton.retrofit:retrofit2-kotlin-coroutines-adapter:0.9.2")
-    implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01")
+    implementation("com.github.qamarelsafadi:CurvedBottomNavigation:0.1.3")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.13.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

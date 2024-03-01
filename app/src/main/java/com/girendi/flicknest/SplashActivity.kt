@@ -7,7 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.girendi.flicknest.databinding.ActivitySplashBinding
-import com.girendi.flicknest.presentation.genres.GenresActivity
+import com.girendi.flicknest.presentation.MainActivity
 
 @SuppressLint("CustomSplashScreen")
 class SplashActivity: AppCompatActivity() {
@@ -21,7 +21,7 @@ class SplashActivity: AppCompatActivity() {
 
         Handler(Looper.getMainLooper()).postDelayed(
             {
-                startActivity(Intent(this, GenresActivity::class.java))
+                startActivity(Intent(this, MainActivity::class.java))
                 finish()
             }, 3000
         )

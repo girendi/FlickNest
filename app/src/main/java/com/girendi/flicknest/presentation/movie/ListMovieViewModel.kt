@@ -30,20 +30,49 @@ class ListMovieViewModel(private val fetchMovieByGenreUseCase: FetchMovieByGenre
         }
 
         viewModelScope.launch {
-            when(val result = fetchMovieByGenreUseCase(currentPage, genreId)) {
-                is Result.Success -> {
-                    val movies = _listMovie.value.orEmpty() + result.data
-                    _listMovie.postValue(movies)
-                    _uiState.postValue(UiState.Success)
-                    isLastPage = result.data.isEmpty()
-                    currentPage++
-                }
-                is Result.Error -> {
-                    _uiState.value = UiState.Error(result.exception.message ?: "An unknown error occurred")
-                }
-                is Result.Loading -> {
-                    _uiState.value = UiState.Loading
-                }
+            val result = fetchMovieByGenreUseCase(currentPage, genreId)
+            handleResult(result)
+        }
+    }
+
+    fun fetchPopularBasedMovies() {
+        if (isLastPage) {
+            _uiState.postValue(UiState.Success)
+            return
+        }
+
+        viewModelScope.launch {
+            val result = fetchMovieByGenreUseCase.fetchPopularBasedMovies(currentPage)
+            handleResult(result)
+        }
+    }
+
+    fun fetchTrendingBasedMovies() {
+        if (isLastPage) {
+            _uiState.postValue(UiState.Success)
+            return
+        }
+
+        viewModelScope.launch {
+            val result = fetchMovieByGenreUseCase.fetchTrendingBasedMovies(currentPage)
+            handleResult(result)
+        }
+    }
+
+    private fun handleResult(result: Result<List<Movie>>) {
+        when(result) {
+            is Result.Success -> {
+                val movies = _listMovie.value.orEmpty() + result.data
+                _listMovie.postValue(movies)
+                _uiState.postValue(UiState.Success)
+                isLastPage = result.data.isEmpty()
+                currentPage++
+            }
+            is Result.Error -> {
+                _uiState.value = UiState.Error(result.exception.message ?: "An unknown error occurred")
+            }
+            is Result.Loading -> {
+                _uiState.value = UiState.Loading
             }
         }
     }

@@ -21,5 +21,7 @@ data class Movie(
     @field:SerializedName("homepage")
     var homepage: String? = null,
     @field:SerializedName("tagline")
-    var tagline: String? = null
+    var tagline: String? = null,
+    @field:SerializedName("backdrop_path")
+    var backdropPath: String? = null
 ) : Parcelable

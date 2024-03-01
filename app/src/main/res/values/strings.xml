@@ -7,4 +7,11 @@
     <string name="review">Review</string>
     <string name="no_review_yet">No Review Yet!</string>
     <string name="something_went_wrong">Something went wrong !</string>
+    <string name="home">Home</string>
+    <string name="genre">Genre</string>
+    <string name="favorite">Favorite</string>
+    <string name="most_populars">Most Populars</string>
+    <string name="see_more">See More</string>
+    <string name="explore">Explore</string>
+    <string name="trending">Trending</string>
 </resources>

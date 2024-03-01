@@ -28,12 +28,12 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-        <activity android:name="com.girendi.flicknest.presentation.genres.GenresActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"/>
         <activity android:name="com.girendi.flicknest.presentation.movie.ListMovieActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar"/>
         <activity android:name="com.girendi.flicknest.presentation.detail.DetailMovieActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar"/>
+        <activity android:name="com.girendi.flicknest.presentation.MainActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"/>
     </application>
 
 </manifest>

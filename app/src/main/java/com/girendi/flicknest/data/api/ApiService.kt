@@ -32,4 +32,14 @@ interface ApiService {
     suspend fun fetchMovieVideos(
         @Path("movieId") movieId: Int
     ): Response<ListVideoResponse>
+
+    @GET("movie/popular")
+    suspend fun fetchPopularMovie(
+        @Query("page") page: Int
+    ): Response<ListMovieResponse>
+
+    @GET("trending/movie/day")
+    suspend fun fetchTrendingMovie(
+        @Query("page") page: Int
+    ): Response<ListMovieResponse>
 }
