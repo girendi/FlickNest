@@ -26,7 +26,8 @@
             android:contentDescription="@string/image_todo"
             android:src="@drawable/bg_splash"
             android:scaleType="centerCrop"
-            app:shapeAppearanceOverlay="@style/RoundedSquare" />
+            app:shapeAppearanceOverlay="@style/RoundedSquare"
+            app:strokeColor="@null"/>
 
         <TextView
             android:id="@+id/tvTitle"

@@ -12,12 +12,11 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.girendi.flicknest.R
-import com.girendi.flicknest.data.model.Movie
-import com.girendi.flicknest.data.ui.SimpleRecyclerAdapter
+import com.girendi.flicknest.core.domain.model.Movie
+import com.girendi.flicknest.core.ui.SimpleRecyclerAdapter
 import com.girendi.flicknest.databinding.FragmentHomeBinding
 import com.girendi.flicknest.databinding.ItemListMostPopularBinding
-import com.girendi.flicknest.domain.Result
-import com.girendi.flicknest.domain.UiState
+import com.girendi.flicknest.core.domain.UiState
 import com.girendi.flicknest.presentation.detail.DetailMovieActivity
 import com.girendi.flicknest.presentation.movie.ListMovieActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -117,34 +116,10 @@ class HomeFragment: Fragment() {
 
     private fun observeViewModel() {
         viewModelHome.trending.observe(viewLifecycleOwner) { result ->
-            when(result) {
-                is Result.Success -> {
-                    showLoading(false)
-                    adapterTrending.setListItem(result.data)
-                }
-                is Result.Error -> {
-                    showLoading(false)
-                    showError(result.exception.message ?: "An error occurred")
-                }
-                is Result.Loading -> {
-                    showLoading(true)
-                }
-            }
+            adapterTrending.setListItem(result)
         }
         viewModelHome.mostTrending.observe(viewLifecycleOwner) { result ->
-            when(result) {
-                is Result.Success -> {
-                    showLoading(false)
-                    showMostTrendingMovie(result.data)
-                }
-                is Result.Error -> {
-                    showLoading(false)
-                    showError(result.exception.message ?: "An error occurred")
-                }
-                is Result.Loading -> {
-                    showLoading(true)
-                }
-            }
+            showMostTrendingMovie(result)
         }
         viewModelHome.uiState.observe(viewLifecycleOwner) { state ->
             handleUiState(state)
@@ -152,25 +127,8 @@ class HomeFragment: Fragment() {
         viewModelHome.resultMovie.observe(viewLifecycleOwner) { movies ->
             adapterPopular.setListItem(movies)
         }
-        viewModelHome.resultVideos.observe(viewLifecycleOwner) { result ->
-            when(result) {
-                is Result.Success -> {
-                    showLoading(false)
-                    val trailers = result.data.filter {
-                        it.type == "Trailer"
-                    }
-                    if (trailers.isNotEmpty()) {
-                        playYoutubeVideo(trailers[0].key)
-                    }
-                }
-                is Result.Error -> {
-                    showLoading(false)
-                    showError(result.exception.message ?: "An error occurred")
-                }
-                is Result.Loading -> {
-                    showLoading(true)
-                }
-            }
+        viewModelHome.video.observe(viewLifecycleOwner) { video ->
+            if (video != null) playYoutubeVideo(video.key)
         }
     }
 

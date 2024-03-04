@@ -2,6 +2,7 @@ package com.girendi.flicknest.presentation.movie
 
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -10,15 +11,16 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.girendi.flicknest.R
-import com.girendi.flicknest.data.model.Genre
-import com.girendi.flicknest.data.model.Movie
-import com.girendi.flicknest.data.ui.SimpleRecyclerAdapter
+import com.girendi.flicknest.core.domain.UiState
+import com.girendi.flicknest.core.domain.model.Genre
+import com.girendi.flicknest.core.domain.model.Movie
+import com.girendi.flicknest.core.ui.SimpleRecyclerAdapter
 import com.girendi.flicknest.databinding.ActivityListMovieBinding
 import com.girendi.flicknest.databinding.ItemListMovieBinding
-import com.girendi.flicknest.domain.UiState
 import com.girendi.flicknest.presentation.detail.DetailMovieActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import kotlin.math.round
+
 
 class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
 
@@ -36,7 +38,11 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
         setSupportActionBar(binding.toolBar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        genre = intent.getParcelableExtra(EXTRA_GENRE)
+        genre = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra(EXTRA_GENRE, Genre::class.java)
+        } else {
+            intent.getParcelableExtra(EXTRA_GENRE)
+        }
         requestType = intent.getStringExtra(EXTRA_REQUEST)
         if (genre != null) {
             supportActionBar?.title = genre?.name
@@ -133,7 +139,7 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
 
     private fun setupOnClick() {
         binding.toolBar.setNavigationOnClickListener {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
     }
 

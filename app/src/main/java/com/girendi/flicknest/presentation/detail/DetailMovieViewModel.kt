@@ -4,12 +4,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.girendi.flicknest.data.model.Movie
-import com.girendi.flicknest.data.model.Review
-import com.girendi.flicknest.data.model.Video
-import com.girendi.flicknest.domain.Result
-import com.girendi.flicknest.domain.UiState
-import com.girendi.flicknest.domain.usecase.FetchDetailMovieUseCase
+import com.girendi.flicknest.core.domain.model.Movie
+import com.girendi.flicknest.core.domain.model.Review
+import com.girendi.flicknest.core.domain.model.Video
+import com.girendi.flicknest.core.domain.Result
+import com.girendi.flicknest.core.domain.UiState
+import com.girendi.flicknest.core.domain.usecase.FetchDetailMovieUseCase
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -26,8 +26,11 @@ class DetailMovieViewModel(private val fetchDetailMovieUseCase: FetchDetailMovie
     private val _listReview = MutableLiveData<List<Review>>()
     val listReview: LiveData<List<Review>> = _listReview
 
-    private val _resultVideos = MutableLiveData<Result<List<Video>>>()
-    val resultVideos: LiveData<Result<List<Video>>> = _resultVideos
+    private val _video = MutableLiveData<Video>()
+    val video: LiveData<Video> = _video
+
+    private val _error = MutableLiveData<String>()
+    val error: LiveData<String> = _error
 
     private var currentPage = 1
     private var isLastPage = false
@@ -38,19 +41,19 @@ class DetailMovieViewModel(private val fetchDetailMovieUseCase: FetchDetailMovie
             _resultMovie.value = fetchDetailMovieUseCase.fetchMovieDetail(movieId)
         }
     }
-
-    fun fetchMovieReviews(movieId: Int) {
+    fun fetchReviewByMovie(movieId: Int) {
         if (isLastPage) {
             _uiState.postValue(UiState.Success)
             return
         }
         viewModelScope.launch {
-            when(val result = fetchDetailMovieUseCase.fetchMovieReviews(currentPage, movieId)) {
+            _uiState.value = UiState.Loading
+            when(val result = fetchDetailMovieUseCase.fetchReviewByMovie(currentPage, movieId)) {
                 is Result.Success -> {
-                    val reviews = _listReview.value.orEmpty() + result.data
+                    val reviews = _listReview.value.orEmpty() + result.data.listReview
+                    isLastPage = result.data.listReview.isEmpty()
                     _listReview.postValue(reviews)
                     _uiState.postValue(UiState.Success)
-                    isLastPage = result.data.isEmpty()
                     currentPage++
                 }
                 is Result.Error -> {
@@ -63,10 +66,27 @@ class DetailMovieViewModel(private val fetchDetailMovieUseCase: FetchDetailMovie
         }
     }
 
-    fun fetchMovieVideos(movieId: Int) {
+    fun fetchVideoByMovie(movieId: Int) {
         viewModelScope.launch {
-            _resultVideos.value = Result.Loading
-            _resultVideos.value = fetchDetailMovieUseCase.fetchMovieVideos(movieId)
+            _uiState.value = UiState.Loading
+            when(val result = fetchDetailMovieUseCase.fetchVideoByMovie(movieId)) {
+                is Result.Success -> {
+                    val videos = result.data.listVideo
+                    val trailers = videos.filter {
+                        it.type == "Trailer"
+                    }
+                    if (trailers.isNotEmpty()) {
+                        _video.value = trailers[0]
+                    }
+                    _uiState.value = UiState.Success
+                }
+                is Result.Error -> {
+                    _uiState.value = UiState.Error(result.exception.message ?: "An unknown error occurred")
+                }
+                is Result.Loading -> {
+                    _uiState.value = UiState.Loading
+                }
+            }
         }
     }
 

@@ -22,6 +22,7 @@
             android:contentDescription="@string/image_todo"
             android:src="@drawable/bg_splash"
             android:scaleType="centerCrop"
+            app:strokeColor="@null"
             app:shapeAppearanceOverlay="@style/RoundedSquare"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

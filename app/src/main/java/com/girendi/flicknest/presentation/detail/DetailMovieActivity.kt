@@ -12,13 +12,13 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.girendi.flicknest.R
-import com.girendi.flicknest.data.model.Movie
-import com.girendi.flicknest.data.model.Review
-import com.girendi.flicknest.data.ui.SimpleRecyclerAdapter
+import com.girendi.flicknest.core.domain.model.Movie
+import com.girendi.flicknest.core.domain.model.Review
+import com.girendi.flicknest.core.ui.SimpleRecyclerAdapter
 import com.girendi.flicknest.databinding.ActivityDetailMovieBinding
 import com.girendi.flicknest.databinding.ItemListReviewBinding
-import com.girendi.flicknest.domain.Result
-import com.girendi.flicknest.domain.UiState
+import com.girendi.flicknest.core.domain.Result
+import com.girendi.flicknest.core.domain.UiState
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import kotlin.math.round
 
@@ -66,7 +66,7 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
                     if (!binding.rvListReview.canScrollVertically(1)) {
-                        movieId?.let { viewModelMovie.fetchMovieReviews(it) }
+                        movieId?.let { viewModelMovie.fetchReviewByMovie(it) }
                     }
                 }
             }
@@ -94,25 +94,8 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
                 }
             }
         }
-        viewModelMovie.resultVideos.observe(this) { result ->
-            when(result) {
-                is Result.Success -> {
-                    showLoading(false)
-                    val trailers = result.data.filter {
-                        it.type == "Trailer"
-                    }
-                    if (trailers.isNotEmpty()) {
-                        playYoutubeVideo(trailers[0].key)
-                    }
-                }
-                is Result.Error -> {
-                    showLoading(false)
-                    showError(result.exception.message ?: "An error occurred")
-                }
-                is Result.Loading -> {
-                    showLoading(true)
-                }
-            }
+        viewModelMovie.video.observe(this) { video ->
+            if (video != null) playYoutubeVideo(video.key)
         }
         viewModelMovie.uiState.observe(this) { state ->
             handleUiState(state)
@@ -121,9 +104,12 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
             handleEmptyResult(reviews.isEmpty())
             adapterReview.setListItem(reviews)
         }
+        viewModelMovie.error.observe(this) { message ->
+            handleViewContent(message, true)
+        }
         movieId?.let {
             viewModelMovie.fetchMovieDetail(it)
-            viewModelMovie.fetchMovieReviews(it)
+            viewModelMovie.fetchReviewByMovie(it)
         }
     }
 
@@ -140,9 +126,13 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
 
     private fun handleUiState(state: UiState) {
         when (state) {
-            is UiState.Loading -> showRefreshLayout(true)
-            is UiState.Success -> showRefreshLayout(false)
+            is UiState.Loading -> showLoading(true)
+            is UiState.Success -> {
+                showLoading(false)
+                showRefreshLayout(false)
+            }
             is UiState.Error -> {
+                showLoading(false)
                 showRefreshLayout(false)
                 handleEmptyResult(true)
                 showError(state.message)
@@ -173,10 +163,10 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
 
     private fun setupOnClick() {
         binding.toolbar.setNavigationOnClickListener {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
         binding.cvTrailer.setOnClickListener {
-            movieId?.let { id -> viewModelMovie.fetchMovieVideos(id) }
+            movieId?.let { id -> viewModelMovie.fetchVideoByMovie(id) }
         }
     }
 
@@ -202,6 +192,9 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
     }
 
     override fun onRefresh() {
-        movieId?.let { viewModelMovie.fetchMovieReviews(it) }
+        movieId?.let {
+            showRefreshLayout(true)
+            viewModelMovie.fetchReviewByMovie(it)
+        }
     }
 }
