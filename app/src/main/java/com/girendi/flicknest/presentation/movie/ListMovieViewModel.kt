@@ -4,11 +4,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.girendi.flicknest.core.data.response.ListMovieResponse
+import com.girendi.flicknest.core.data.source.remote.response.ListMovieResponse
 import com.girendi.flicknest.core.domain.model.Movie
-import com.girendi.flicknest.core.domain.Result
-import com.girendi.flicknest.core.domain.UiState
+import com.girendi.flicknest.core.data.Result
+import com.girendi.flicknest.core.data.UiState
 import com.girendi.flicknest.core.domain.usecase.FetchMovieByFilterUseCase
+import com.girendi.flicknest.core.utils.DataMapperMovie
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -64,7 +65,7 @@ class ListMovieViewModel(private val fetchMovieByFilterUseCase: FetchMovieByFilt
         _uiState.value = UiState.Loading
         when(result) {
             is Result.Success -> {
-                val movies = _listMovie.value.orEmpty() + result.data.listMovie
+                val movies = _listMovie.value.orEmpty() + DataMapperMovie.mapResponsesToDomain(result.data.listMovie)
                 _listMovie.postValue(movies)
                 _uiState.postValue(UiState.Success)
                 isLastPage = result.data.listMovie.isEmpty()

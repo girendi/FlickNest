@@ -5,9 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.girendi.flicknest.core.domain.model.Genre
-import com.girendi.flicknest.core.domain.Result
-import com.girendi.flicknest.core.domain.UiState
+import com.girendi.flicknest.core.data.Result
+import com.girendi.flicknest.core.data.UiState
 import com.girendi.flicknest.core.domain.usecase.FetchGenreUseCase
+import com.girendi.flicknest.core.utils.DataMapperGenre
 import kotlinx.coroutines.launch
 
 class GenreViewModel(private val fetchGenreUseCase: FetchGenreUseCase) : ViewModel() {
@@ -26,7 +27,7 @@ class GenreViewModel(private val fetchGenreUseCase: FetchGenreUseCase) : ViewMod
             _uiState.value = UiState.Loading
             when(val result = fetchGenreUseCase.fetchGenreMovie()) {
                 is Result.Success -> {
-                    _listGenre.value = result.data.listGenre
+                    _listGenre.value = DataMapperGenre.mapResponsesToDomain(result.data.listGenre)
                     _uiState.value = UiState.Success
                 }
                 is Result.Error -> {

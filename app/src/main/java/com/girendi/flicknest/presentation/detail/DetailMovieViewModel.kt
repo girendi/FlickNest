@@ -3,13 +3,17 @@ package com.girendi.flicknest.presentation.detail
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.girendi.flicknest.core.domain.model.Movie
 import com.girendi.flicknest.core.domain.model.Review
 import com.girendi.flicknest.core.domain.model.Video
-import com.girendi.flicknest.core.domain.Result
-import com.girendi.flicknest.core.domain.UiState
+import com.girendi.flicknest.core.data.Result
+import com.girendi.flicknest.core.data.UiState
 import com.girendi.flicknest.core.domain.usecase.FetchDetailMovieUseCase
+import com.girendi.flicknest.core.utils.DataMapperMovie
+import com.girendi.flicknest.core.utils.DataMapperReview
+import com.girendi.flicknest.core.utils.DataMapperVideo
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -20,8 +24,8 @@ class DetailMovieViewModel(private val fetchDetailMovieUseCase: FetchDetailMovie
     private val _uiState = MutableLiveData<UiState>()
     val uiState: LiveData<UiState> = _uiState
 
-    private val _resultMovie = MutableLiveData<Result<Movie>>()
-    val resultMovie: LiveData<Result<Movie>> = _resultMovie
+    private val _movie = MutableLiveData<Movie>()
+    val movie: LiveData<Movie> = _movie
 
     private val _listReview = MutableLiveData<List<Review>>()
     val listReview: LiveData<List<Review>> = _listReview
@@ -37,8 +41,20 @@ class DetailMovieViewModel(private val fetchDetailMovieUseCase: FetchDetailMovie
 
     fun fetchMovieDetail(movieId: Int) {
         viewModelScope.launch {
-            _resultMovie.value = Result.Loading
-            _resultMovie.value = fetchDetailMovieUseCase.fetchMovieDetail(movieId)
+            _uiState.value = UiState.Loading
+            when(val result = fetchDetailMovieUseCase.fetchMovieDetail(movieId)) {
+                is Result.Success -> {
+                    _movie.value = DataMapperMovie.mapResponseToDomain(result.data)
+                    _uiState.postValue(UiState.Success)
+                }
+                is Result.Error -> {
+                    _error.value = result.exception.message ?: "An unknown error occurred"
+                    _uiState.value = UiState.Error(result.exception.message ?: "An unknown error occurred")
+                }
+                is Result.Loading -> {
+                    _uiState.value = UiState.Loading
+                }
+            }
         }
     }
     fun fetchReviewByMovie(movieId: Int) {
@@ -50,7 +66,7 @@ class DetailMovieViewModel(private val fetchDetailMovieUseCase: FetchDetailMovie
             _uiState.value = UiState.Loading
             when(val result = fetchDetailMovieUseCase.fetchReviewByMovie(currentPage, movieId)) {
                 is Result.Success -> {
-                    val reviews = _listReview.value.orEmpty() + result.data.listReview
+                    val reviews = _listReview.value.orEmpty() + DataMapperReview.mapResponsesToDomain(result.data.listReview)
                     isLastPage = result.data.listReview.isEmpty()
                     _listReview.postValue(reviews)
                     _uiState.postValue(UiState.Success)
@@ -71,7 +87,7 @@ class DetailMovieViewModel(private val fetchDetailMovieUseCase: FetchDetailMovie
             _uiState.value = UiState.Loading
             when(val result = fetchDetailMovieUseCase.fetchVideoByMovie(movieId)) {
                 is Result.Success -> {
-                    val videos = result.data.listVideo
+                    val videos = DataMapperVideo.mapResponsesToDomain(result.data.listVideo)
                     val trailers = videos.filter {
                         it.type == "Trailer"
                     }
@@ -87,6 +103,20 @@ class DetailMovieViewModel(private val fetchDetailMovieUseCase: FetchDetailMovie
                     _uiState.value = UiState.Loading
                 }
             }
+        }
+    }
+
+    fun getFavoriteMovieById(movieId: Int): LiveData<Movie?> = fetchDetailMovieUseCase.getFavoriteMovieById(movieId).asLiveData()
+
+    fun insertFavoriteMovie(movie: Movie) {
+        viewModelScope.launch {
+            fetchDetailMovieUseCase.insertFavoriteMovie(movie)
+        }
+    }
+
+    fun deleteFavoriteMovie(movie: Movie) {
+        viewModelScope.launch {
+            fetchDetailMovieUseCase.deleteFavoriteMovie(movie)
         }
     }
 

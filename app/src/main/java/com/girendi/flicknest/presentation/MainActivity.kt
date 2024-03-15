@@ -29,9 +29,9 @@ class MainActivity: AppCompatActivity() {
         binding.bottomNavigation.add(
             CurvedBottomNavigation.Model(2, resources.getString(R.string.genre), R.drawable.ic_dashboard_white)
         )
-//        binding.bottomNavigation.add(
-//            CurvedBottomNavigation.Model(3, resources.getString(R.string.favorite), R.drawable.ic_favorite_white)
-//        )
+        binding.bottomNavigation.add(
+            CurvedBottomNavigation.Model(3, resources.getString(R.string.favorite), R.drawable.ic_favorite_white)
+        )
     }
 
     private fun handleOnClick() {

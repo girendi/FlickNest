@@ -7,12 +7,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.girendi.flicknest.R
+import com.girendi.flicknest.core.R
 import com.girendi.flicknest.core.ui.SimpleRecyclerAdapter
 import com.girendi.flicknest.core.domain.model.Genre
 import com.girendi.flicknest.databinding.FragmentGenreBinding
-import com.girendi.flicknest.databinding.ItemListGenresBinding
-import com.girendi.flicknest.core.domain.UiState
+import com.girendi.flicknest.core.data.UiState
+import com.girendi.flicknest.core.databinding.ItemListGenresBinding
 import com.girendi.flicknest.presentation.movie.ListMovieActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
 

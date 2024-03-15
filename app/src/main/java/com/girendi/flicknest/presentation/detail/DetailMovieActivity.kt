@@ -16,9 +16,8 @@ import com.girendi.flicknest.core.domain.model.Movie
 import com.girendi.flicknest.core.domain.model.Review
 import com.girendi.flicknest.core.ui.SimpleRecyclerAdapter
 import com.girendi.flicknest.databinding.ActivityDetailMovieBinding
-import com.girendi.flicknest.databinding.ItemListReviewBinding
-import com.girendi.flicknest.core.domain.Result
-import com.girendi.flicknest.core.domain.UiState
+import com.girendi.flicknest.core.data.UiState
+import com.girendi.flicknest.core.databinding.ItemListReviewBinding
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import kotlin.math.round
 
@@ -28,6 +27,7 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
     private lateinit var adapterReview: SimpleRecyclerAdapter<Review>
     private val viewModelMovie: DetailMovieViewModel by viewModel()
     private var movieId: Int? = null
+    private var movie: Movie? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +48,7 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
     private fun setupRecyclerView() {
         adapterReview = SimpleRecyclerAdapter(
             context = this,
-            layoutResId = R.layout.item_list_review,
+            layoutResId = com.girendi.flicknest.core.R.layout.item_list_review,
             bindViewHolder = { view, item ->
                 val itemBinding = ItemListReviewBinding.bind(view)
                 val datetime = viewModelMovie.reformatDateString(item.createdAt)
@@ -77,21 +77,11 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
 
     @SuppressLint("SetTextI18n")
     private fun observeViewModel() {
-        viewModelMovie.resultMovie.observe(this) { result ->
-            when(result) {
-                is Result.Success -> {
-                    showLoading(false)
-                    handleViewContent("", false)
-                    showMovieDetail(result.data)
-                }
-                is Result.Error -> {
-                    showLoading(false)
-                    supportActionBar?.title = resources.getString(R.string.something_went_wrong)
-                    handleViewContent(result.exception.message ?: "An error occurred", true)
-                }
-                is Result.Loading -> {
-                    showLoading(true)
-                }
+        viewModelMovie.movie.observe(this) { movie ->
+            if (movie != null) {
+                this.movie = movie
+                showMovieDetail(movie)
+                handleViewContent("", false)
             }
         }
         viewModelMovie.video.observe(this) { video ->
@@ -106,10 +96,28 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
         }
         viewModelMovie.error.observe(this) { message ->
             handleViewContent(message, true)
+            supportActionBar?.title = resources.getString(R.string.something_went_wrong)
         }
         movieId?.let {
             viewModelMovie.fetchMovieDetail(it)
             viewModelMovie.fetchReviewByMovie(it)
+            viewModelMovie.getFavoriteMovieById(it).observe(this) { favoriteMovie ->
+                if (favoriteMovie != null) {
+                    binding.icFavorite.apply {
+                        setImageResource(R.drawable.ic_favorite_white)
+                        setOnClickListener {
+                            viewModelMovie.deleteFavoriteMovie(favoriteMovie)
+                        }
+                    }
+                } else {
+                    binding.icFavorite.apply {
+                        setImageResource(R.drawable.ic_unfavorite_white)
+                        setOnClickListener {
+                            movie?.let { movie -> viewModelMovie.insertFavoriteMovie(movie) }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -140,6 +148,7 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun showMovieDetail(data: Movie) {
         binding.tvTitle.text = data.title
         binding.tvDateTime.text = data.releaseDate?.let { time ->

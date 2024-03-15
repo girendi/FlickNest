@@ -11,16 +11,15 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.girendi.flicknest.R
-import com.girendi.flicknest.core.domain.UiState
+import com.girendi.flicknest.core.data.UiState
+import com.girendi.flicknest.core.databinding.ItemListMovieBinding
 import com.girendi.flicknest.core.domain.model.Genre
 import com.girendi.flicknest.core.domain.model.Movie
 import com.girendi.flicknest.core.ui.SimpleRecyclerAdapter
 import com.girendi.flicknest.databinding.ActivityListMovieBinding
-import com.girendi.flicknest.databinding.ItemListMovieBinding
 import com.girendi.flicknest.presentation.detail.DetailMovieActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import kotlin.math.round
-
 
 class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
 
@@ -102,12 +101,13 @@ class ListMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshListen
     private fun setupRecyclerView() {
         adapterMovie = SimpleRecyclerAdapter(
             context = this,
-            layoutResId = R.layout.item_list_movie,
+            layoutResId = com.girendi.flicknest.core.R.layout.item_list_movie,
             bindViewHolder = { view, item ->
                 val itemBinding = ItemListMovieBinding.bind(view)
                 itemBinding.tvTitle.text = item.title
                 itemBinding.tvVote.text = item.voteAverage?.let { round(it).toString() }
-                itemBinding.tvDateTime.text = item.releaseDate?.let { movieViewModel.changeDateFormat(it) }
+                itemBinding.tvDateTime.text =
+                    item.releaseDate?.let { movieViewModel.changeDateFormat(it) }
                 Glide.with(this)
                     .load(item.posterPath?.let { movieViewModel.getPathImage(it) })
                     .into(itemBinding.imageView)

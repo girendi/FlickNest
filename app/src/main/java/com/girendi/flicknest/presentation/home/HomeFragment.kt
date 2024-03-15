@@ -15,8 +15,8 @@ import com.girendi.flicknest.R
 import com.girendi.flicknest.core.domain.model.Movie
 import com.girendi.flicknest.core.ui.SimpleRecyclerAdapter
 import com.girendi.flicknest.databinding.FragmentHomeBinding
-import com.girendi.flicknest.databinding.ItemListMostPopularBinding
-import com.girendi.flicknest.core.domain.UiState
+import com.girendi.flicknest.core.data.UiState
+import com.girendi.flicknest.core.databinding.ItemListMostPopularBinding
 import com.girendi.flicknest.presentation.detail.DetailMovieActivity
 import com.girendi.flicknest.presentation.movie.ListMovieActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -61,7 +61,7 @@ class HomeFragment: Fragment() {
     private fun setupRecyclerView() {
         adapterTrending = SimpleRecyclerAdapter(
             context = requireContext(),
-            layoutResId = R.layout.item_list_most_popular,
+            layoutResId = com.girendi.flicknest.core.R.layout.item_list_most_popular,
             bindViewHolder = { view, item ->
                 val itemBinding = ItemListMostPopularBinding.bind(view)
                 itemBinding.tvTitle.text = item.title
@@ -90,7 +90,7 @@ class HomeFragment: Fragment() {
 
         adapterPopular = SimpleRecyclerAdapter(
             context = requireContext(),
-            layoutResId = R.layout.item_list_most_popular,
+            layoutResId = com.girendi.flicknest.core.R.layout.item_list_most_popular,
             bindViewHolder = { view, item ->
                 val itemBinding = ItemListMostPopularBinding.bind(view)
                 itemBinding.tvTitle.text = item.title

@@ -6,9 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.girendi.flicknest.core.domain.model.Movie
 import com.girendi.flicknest.core.domain.model.Video
-import com.girendi.flicknest.core.domain.Result
-import com.girendi.flicknest.core.domain.UiState
+import com.girendi.flicknest.core.data.Result
+import com.girendi.flicknest.core.data.UiState
 import com.girendi.flicknest.core.domain.usecase.FetchMovieUseCase
+import com.girendi.flicknest.core.utils.DataMapperMovie
+import com.girendi.flicknest.core.utils.DataMapperVideo
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -41,7 +43,7 @@ class HomeViewModel(private val fetchMovieUseCase: FetchMovieUseCase): ViewModel
             _uiState.value = UiState.Loading
             when(val result = fetchMovieUseCase.fetchTrendingMovies(currentPage)) {
                 is Result.Success -> {
-                    val movie = result.data.listMovie
+                    val movie = DataMapperMovie.mapResponsesToDomain(result.data.listMovie)
                     _trending.value = movie
                     _mostTrending.value = movie.firstOrNull()!!
                 }
@@ -60,7 +62,8 @@ class HomeViewModel(private val fetchMovieUseCase: FetchMovieUseCase): ViewModel
             _uiState.value = UiState.Loading
             when(val result = fetchMovieUseCase.fetchPopularMovies(currentPage)) {
                 is Result.Success -> {
-                    _resultMovie.postValue(result.data.listMovie)
+                    val movie = DataMapperMovie.mapResponsesToDomain(result.data.listMovie)
+                    _resultMovie.postValue(movie)
                     _uiState.postValue(UiState.Success)
                 }
                 is Result.Error -> {
@@ -78,7 +81,7 @@ class HomeViewModel(private val fetchMovieUseCase: FetchMovieUseCase): ViewModel
             _uiState.value = UiState.Loading
             when(val result = fetchMovieUseCase.fetchVideoByMovie(movieId)) {
                 is Result.Success -> {
-                    val videos = result.data.listVideo
+                    val videos = DataMapperVideo.mapResponsesToDomain(result.data.listVideo)
                     val trailers = videos.filter {
                         it.type == "Trailer"
                     }
