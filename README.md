@@ -17,7 +17,8 @@ MovieMania is a native mobile application that leverages the [The Movie Database
 ### Prerequisites
 <ul>
   <li>Android Studio</li>
-  <li>A valid API key from [TMDb](https://developer.themoviedb.org/docs/getting-started)</li>
+  <li>A valid API key from TMDb.
+  </li>
 </ul>
 
 ### Installation
