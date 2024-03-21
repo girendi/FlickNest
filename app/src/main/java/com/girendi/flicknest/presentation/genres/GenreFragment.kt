@@ -7,12 +7,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.girendi.flicknest.R
-import com.girendi.flicknest.data.ui.SimpleRecyclerAdapter
-import com.girendi.flicknest.data.model.Genre
+import com.girendi.flicknest.core.R
+import com.girendi.flicknest.core.ui.SimpleRecyclerAdapter
+import com.girendi.flicknest.core.domain.model.Genre
 import com.girendi.flicknest.databinding.FragmentGenreBinding
-import com.girendi.flicknest.databinding.ItemListGenresBinding
-import com.girendi.flicknest.domain.Result
+import com.girendi.flicknest.core.data.UiState
+import com.girendi.flicknest.core.databinding.ItemListGenresBinding
 import com.girendi.flicknest.presentation.movie.ListMovieActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -38,20 +38,22 @@ class GenreFragment: Fragment() {
     }
 
     private fun observeViewModel() {
-        genreViewModel.listGenre.observe(viewLifecycleOwner) { result ->
-            when (result) {
-                is Result.Success -> {
-                    showLoading(false)
-                    handleViewContent("", false)
-                    adapterGenre.setListItem(result.data)
-                }
-                is Result.Error -> {
-                    showLoading(false)
-                    handleViewContent(result.exception.message ?: "An error occurred", true)
-                }
-                is Result.Loading -> {
-                    showLoading(true)
-                }
+        genreViewModel.listGenre.observe(viewLifecycleOwner) { genres ->
+            adapterGenre.setListItem(genres)
+            handleViewContent("", false)
+        }
+        genreViewModel.uiState.observe(viewLifecycleOwner) { state ->
+            handleUiState(state)
+        }
+    }
+
+    private fun handleUiState(state: UiState) {
+        when (state) {
+            is UiState.Loading -> showLoading(true)
+            is UiState.Success -> showLoading(false)
+            is UiState.Error -> {
+                showLoading(false)
+                handleViewContent(state.message, true)
             }
         }
     }

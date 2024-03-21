@@ -17,4 +17,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "FlickNest"
 include(":app")
- 
+include(":core")
+include(":favorite")

@@ -12,13 +12,12 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.girendi.flicknest.R
-import com.girendi.flicknest.data.model.Movie
-import com.girendi.flicknest.data.model.Review
-import com.girendi.flicknest.data.ui.SimpleRecyclerAdapter
+import com.girendi.flicknest.core.domain.model.Movie
+import com.girendi.flicknest.core.domain.model.Review
+import com.girendi.flicknest.core.ui.SimpleRecyclerAdapter
 import com.girendi.flicknest.databinding.ActivityDetailMovieBinding
-import com.girendi.flicknest.databinding.ItemListReviewBinding
-import com.girendi.flicknest.domain.Result
-import com.girendi.flicknest.domain.UiState
+import com.girendi.flicknest.core.data.UiState
+import com.girendi.flicknest.core.databinding.ItemListReviewBinding
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import kotlin.math.round
 
@@ -28,6 +27,7 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
     private lateinit var adapterReview: SimpleRecyclerAdapter<Review>
     private val viewModelMovie: DetailMovieViewModel by viewModel()
     private var movieId: Int? = null
+    private var movie: Movie? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +48,7 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
     private fun setupRecyclerView() {
         adapterReview = SimpleRecyclerAdapter(
             context = this,
-            layoutResId = R.layout.item_list_review,
+            layoutResId = com.girendi.flicknest.core.R.layout.item_list_review,
             bindViewHolder = { view, item ->
                 val itemBinding = ItemListReviewBinding.bind(view)
                 val datetime = viewModelMovie.reformatDateString(item.createdAt)
@@ -66,7 +66,7 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
                     if (!binding.rvListReview.canScrollVertically(1)) {
-                        movieId?.let { viewModelMovie.fetchMovieReviews(it) }
+                        movieId?.let { viewModelMovie.fetchReviewByMovie(it) }
                     }
                 }
             }
@@ -77,42 +77,15 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
 
     @SuppressLint("SetTextI18n")
     private fun observeViewModel() {
-        viewModelMovie.resultMovie.observe(this) { result ->
-            when(result) {
-                is Result.Success -> {
-                    showLoading(false)
-                    handleViewContent("", false)
-                    showMovieDetail(result.data)
-                }
-                is Result.Error -> {
-                    showLoading(false)
-                    supportActionBar?.title = resources.getString(R.string.something_went_wrong)
-                    handleViewContent(result.exception.message ?: "An error occurred", true)
-                }
-                is Result.Loading -> {
-                    showLoading(true)
-                }
+        viewModelMovie.movie.observe(this) { movie ->
+            if (movie != null) {
+                this.movie = movie
+                showMovieDetail(movie)
+                handleViewContent("", false)
             }
         }
-        viewModelMovie.resultVideos.observe(this) { result ->
-            when(result) {
-                is Result.Success -> {
-                    showLoading(false)
-                    val trailers = result.data.filter {
-                        it.type == "Trailer"
-                    }
-                    if (trailers.isNotEmpty()) {
-                        playYoutubeVideo(trailers[0].key)
-                    }
-                }
-                is Result.Error -> {
-                    showLoading(false)
-                    showError(result.exception.message ?: "An error occurred")
-                }
-                is Result.Loading -> {
-                    showLoading(true)
-                }
-            }
+        viewModelMovie.video.observe(this) { video ->
+            if (video != null) playYoutubeVideo(video.key)
         }
         viewModelMovie.uiState.observe(this) { state ->
             handleUiState(state)
@@ -121,9 +94,30 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
             handleEmptyResult(reviews.isEmpty())
             adapterReview.setListItem(reviews)
         }
+        viewModelMovie.error.observe(this) { message ->
+            handleViewContent(message, true)
+            supportActionBar?.title = resources.getString(R.string.something_went_wrong)
+        }
         movieId?.let {
             viewModelMovie.fetchMovieDetail(it)
-            viewModelMovie.fetchMovieReviews(it)
+            viewModelMovie.fetchReviewByMovie(it)
+            viewModelMovie.getFavoriteMovieById(it).observe(this) { favoriteMovie ->
+                if (favoriteMovie != null) {
+                    binding.icFavorite.apply {
+                        setImageResource(R.drawable.ic_favorite_white)
+                        setOnClickListener {
+                            viewModelMovie.deleteFavoriteMovie(favoriteMovie)
+                        }
+                    }
+                } else {
+                    binding.icFavorite.apply {
+                        setImageResource(R.drawable.ic_unfavorite_white)
+                        setOnClickListener {
+                            movie?.let { movie -> viewModelMovie.insertFavoriteMovie(movie) }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -140,9 +134,13 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
 
     private fun handleUiState(state: UiState) {
         when (state) {
-            is UiState.Loading -> showRefreshLayout(true)
-            is UiState.Success -> showRefreshLayout(false)
+            is UiState.Loading -> showLoading(true)
+            is UiState.Success -> {
+                showLoading(false)
+                showRefreshLayout(false)
+            }
             is UiState.Error -> {
+                showLoading(false)
                 showRefreshLayout(false)
                 handleEmptyResult(true)
                 showError(state.message)
@@ -150,6 +148,7 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun showMovieDetail(data: Movie) {
         binding.tvTitle.text = data.title
         binding.tvDateTime.text = data.releaseDate?.let { time ->
@@ -173,10 +172,10 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
 
     private fun setupOnClick() {
         binding.toolbar.setNavigationOnClickListener {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
         binding.cvTrailer.setOnClickListener {
-            movieId?.let { id -> viewModelMovie.fetchMovieVideos(id) }
+            movieId?.let { id -> viewModelMovie.fetchVideoByMovie(id) }
         }
     }
 
@@ -202,6 +201,9 @@ class DetailMovieActivity: AppCompatActivity(), SwipeRefreshLayout.OnRefreshList
     }
 
     override fun onRefresh() {
-        movieId?.let { viewModelMovie.fetchMovieReviews(it) }
+        movieId?.let {
+            showRefreshLayout(true)
+            viewModelMovie.fetchReviewByMovie(it)
+        }
     }
 }

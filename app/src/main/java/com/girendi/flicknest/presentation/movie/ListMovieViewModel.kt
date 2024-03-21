@@ -4,15 +4,17 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.girendi.flicknest.data.model.Movie
-import com.girendi.flicknest.domain.Result
-import com.girendi.flicknest.domain.UiState
-import com.girendi.flicknest.domain.usecase.FetchMovieByGenreUseCase
+import com.girendi.flicknest.core.data.source.remote.response.ListMovieResponse
+import com.girendi.flicknest.core.domain.model.Movie
+import com.girendi.flicknest.core.data.Result
+import com.girendi.flicknest.core.data.UiState
+import com.girendi.flicknest.core.domain.usecase.FetchMovieByFilterUseCase
+import com.girendi.flicknest.core.utils.DataMapperMovie
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class ListMovieViewModel(private val fetchMovieByGenreUseCase: FetchMovieByGenreUseCase) : ViewModel() {
+class ListMovieViewModel(private val fetchMovieByFilterUseCase: FetchMovieByFilterUseCase) : ViewModel() {
 
     private val _listMovie = MutableLiveData<List<Movie>>()
     val listMovie: LiveData<List<Movie>> = _listMovie
@@ -30,7 +32,7 @@ class ListMovieViewModel(private val fetchMovieByGenreUseCase: FetchMovieByGenre
         }
 
         viewModelScope.launch {
-            val result = fetchMovieByGenreUseCase(currentPage, genreId)
+            val result = fetchMovieByFilterUseCase.fetchMovieByGenre(currentPage, genreId)
             handleResult(result)
         }
     }
@@ -42,7 +44,7 @@ class ListMovieViewModel(private val fetchMovieByGenreUseCase: FetchMovieByGenre
         }
 
         viewModelScope.launch {
-            val result = fetchMovieByGenreUseCase.fetchPopularBasedMovies(currentPage)
+            val result = fetchMovieByFilterUseCase.fetchPopularBasedMovies(currentPage)
             handleResult(result)
         }
     }
@@ -54,18 +56,19 @@ class ListMovieViewModel(private val fetchMovieByGenreUseCase: FetchMovieByGenre
         }
 
         viewModelScope.launch {
-            val result = fetchMovieByGenreUseCase.fetchTrendingBasedMovies(currentPage)
+            val result = fetchMovieByFilterUseCase.fetchTrendingBasedMovies(currentPage)
             handleResult(result)
         }
     }
 
-    private fun handleResult(result: Result<List<Movie>>) {
+    private fun handleResult(result: Result<ListMovieResponse>) {
+        _uiState.value = UiState.Loading
         when(result) {
             is Result.Success -> {
-                val movies = _listMovie.value.orEmpty() + result.data
+                val movies = _listMovie.value.orEmpty() + DataMapperMovie.mapResponsesToDomain(result.data.listMovie)
                 _listMovie.postValue(movies)
                 _uiState.postValue(UiState.Success)
-                isLastPage = result.data.isEmpty()
+                isLastPage = result.data.listMovie.isEmpty()
                 currentPage++
             }
             is Result.Error -> {

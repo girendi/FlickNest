@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.girendi.flicknest.R
 import com.girendi.flicknest.databinding.ActivityMainBinding
-import com.girendi.flicknest.presentation.favorite.FavoriteFragment
 import com.girendi.flicknest.presentation.genres.GenreFragment
 import com.girendi.flicknest.presentation.home.HomeFragment
 import com.qamar.curvedbottomnaviagtion.CurvedBottomNavigation
@@ -17,6 +16,7 @@ class MainActivity: AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        supportActionBar?.hide()
 
         setupBottomNavigation()
         handleOnClick()
@@ -29,9 +29,6 @@ class MainActivity: AppCompatActivity() {
         binding.bottomNavigation.add(
             CurvedBottomNavigation.Model(2, resources.getString(R.string.genre), R.drawable.ic_dashboard_white)
         )
-//        binding.bottomNavigation.add(
-//            CurvedBottomNavigation.Model(3, resources.getString(R.string.favorite), R.drawable.ic_favorite_white)
-//        )
     }
 
     private fun handleOnClick() {
@@ -42,9 +39,6 @@ class MainActivity: AppCompatActivity() {
                 }
                 2 -> {
                     replaceFragment(GenreFragment())
-                }
-                3 -> {
-                    replaceFragment(FavoriteFragment())
                 }
             }
         }

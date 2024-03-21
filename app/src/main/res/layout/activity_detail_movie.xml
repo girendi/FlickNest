@@ -38,6 +38,7 @@
                 android:layout_height="180dp"
                 android:contentDescription="@string/image_todo"
                 android:src="@drawable/bg_splash"
+                app:strokeColor="@null"
                 app:shapeAppearanceOverlay="@style/RoundedSquare"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -88,9 +89,19 @@
                 android:textColor="@color/white"
                 android:textSize="12sp"
                 android:textStyle="italic"
+                app:layout_constraintBottom_toTopOf="@+id/icFavorite"
                 app:layout_constraintStart_toEndOf="@+id/imageView"
                 app:layout_constraintTop_toBottomOf="@+id/tvVote"
                 tools:text="One last hund to save us all" />
+
+            <ImageView
+                android:id="@+id/icFavorite"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_unfavorite_white"
+                android:layout_margin="16dp"
+                app:layout_constraintBottom_toBottomOf="@+id/imageView"
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/cvTrailer"
@@ -238,6 +249,7 @@
 
     <ProgressBar
         android:id="@+id/progressBar"
+        tools:visibility="gone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"/>

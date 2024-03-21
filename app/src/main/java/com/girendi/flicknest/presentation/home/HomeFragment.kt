@@ -12,14 +12,15 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.girendi.flicknest.R
-import com.girendi.flicknest.data.model.Movie
-import com.girendi.flicknest.data.ui.SimpleRecyclerAdapter
+import com.girendi.flicknest.core.domain.model.Movie
+import com.girendi.flicknest.core.ui.SimpleRecyclerAdapter
 import com.girendi.flicknest.databinding.FragmentHomeBinding
-import com.girendi.flicknest.databinding.ItemListMostPopularBinding
-import com.girendi.flicknest.domain.Result
-import com.girendi.flicknest.domain.UiState
+import com.girendi.flicknest.core.data.UiState
+import com.girendi.flicknest.core.databinding.ItemListMostPopularBinding
 import com.girendi.flicknest.presentation.detail.DetailMovieActivity
 import com.girendi.flicknest.presentation.movie.ListMovieActivity
+import com.google.android.play.core.splitinstall.SplitInstallManagerFactory
+import com.google.android.play.core.splitinstall.SplitInstallRequest
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class HomeFragment: Fragment() {
@@ -51,6 +52,38 @@ class HomeFragment: Fragment() {
         binding.tvSeeMoreMostPopular.setOnClickListener {
             handleClickSeeMore(resources.getString(R.string.most_populars))
         }
+        binding.ivFavorite.setOnClickListener {
+            try {
+                installFavoriteModule()
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(),
+                    getString(R.string.module_not_found), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun installFavoriteModule() {
+        val splitInstallManager = SplitInstallManagerFactory.create(requireContext())
+        val moduleFavorite = "favorite"
+        if (splitInstallManager.installedModules.contains(moduleFavorite)) {
+            moveToFavoriteActivity()
+        } else {
+            val request = SplitInstallRequest.newBuilder()
+                .addModule(moduleFavorite)
+                .build()
+            splitInstallManager.startInstall(request)
+                .addOnSuccessListener {
+                    moveToFavoriteActivity()
+                }
+                .addOnFailureListener {
+                    Toast.makeText(requireContext(),
+                        getString(R.string.error_installing_module), Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    private fun moveToFavoriteActivity() {
+        startActivity(Intent(requireContext(), Class.forName("com.girendi.flicknest.favorite.presentation.favorite.FavoriteActivity")))
     }
 
     private fun handleClickSeeMore(request: String) {
@@ -62,7 +95,7 @@ class HomeFragment: Fragment() {
     private fun setupRecyclerView() {
         adapterTrending = SimpleRecyclerAdapter(
             context = requireContext(),
-            layoutResId = R.layout.item_list_most_popular,
+            layoutResId = com.girendi.flicknest.core.R.layout.item_list_most_popular,
             bindViewHolder = { view, item ->
                 val itemBinding = ItemListMostPopularBinding.bind(view)
                 itemBinding.tvTitle.text = item.title
@@ -91,7 +124,7 @@ class HomeFragment: Fragment() {
 
         adapterPopular = SimpleRecyclerAdapter(
             context = requireContext(),
-            layoutResId = R.layout.item_list_most_popular,
+            layoutResId = com.girendi.flicknest.core.R.layout.item_list_most_popular,
             bindViewHolder = { view, item ->
                 val itemBinding = ItemListMostPopularBinding.bind(view)
                 itemBinding.tvTitle.text = item.title
@@ -117,34 +150,10 @@ class HomeFragment: Fragment() {
 
     private fun observeViewModel() {
         viewModelHome.trending.observe(viewLifecycleOwner) { result ->
-            when(result) {
-                is Result.Success -> {
-                    showLoading(false)
-                    adapterTrending.setListItem(result.data)
-                }
-                is Result.Error -> {
-                    showLoading(false)
-                    showError(result.exception.message ?: "An error occurred")
-                }
-                is Result.Loading -> {
-                    showLoading(true)
-                }
-            }
+            adapterTrending.setListItem(result)
         }
         viewModelHome.mostTrending.observe(viewLifecycleOwner) { result ->
-            when(result) {
-                is Result.Success -> {
-                    showLoading(false)
-                    showMostTrendingMovie(result.data)
-                }
-                is Result.Error -> {
-                    showLoading(false)
-                    showError(result.exception.message ?: "An error occurred")
-                }
-                is Result.Loading -> {
-                    showLoading(true)
-                }
-            }
+            showMostTrendingMovie(result)
         }
         viewModelHome.uiState.observe(viewLifecycleOwner) { state ->
             handleUiState(state)
@@ -152,25 +161,8 @@ class HomeFragment: Fragment() {
         viewModelHome.resultMovie.observe(viewLifecycleOwner) { movies ->
             adapterPopular.setListItem(movies)
         }
-        viewModelHome.resultVideos.observe(viewLifecycleOwner) { result ->
-            when(result) {
-                is Result.Success -> {
-                    showLoading(false)
-                    val trailers = result.data.filter {
-                        it.type == "Trailer"
-                    }
-                    if (trailers.isNotEmpty()) {
-                        playYoutubeVideo(trailers[0].key)
-                    }
-                }
-                is Result.Error -> {
-                    showLoading(false)
-                    showError(result.exception.message ?: "An error occurred")
-                }
-                is Result.Loading -> {
-                    showLoading(true)
-                }
-            }
+        viewModelHome.video.observe(viewLifecycleOwner) { video ->
+            if (video != null) playYoutubeVideo(video.key)
         }
     }
 

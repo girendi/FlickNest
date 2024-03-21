@@ -4,24 +4,23 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.girendi.flicknest.data.model.Movie
-import com.girendi.flicknest.data.model.Video
-import com.girendi.flicknest.domain.Result
-import com.girendi.flicknest.domain.UiState
-import com.girendi.flicknest.domain.usecase.FetchMovieUseCase
+import com.girendi.flicknest.core.domain.model.Movie
+import com.girendi.flicknest.core.domain.model.Video
+import com.girendi.flicknest.core.data.Result
+import com.girendi.flicknest.core.data.UiState
+import com.girendi.flicknest.core.domain.usecase.FetchMovieUseCase
+import com.girendi.flicknest.core.utils.DataMapperMovie
+import com.girendi.flicknest.core.utils.DataMapperVideo
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class HomeViewModel(private val fetchMovieUseCase: FetchMovieUseCase): ViewModel() {
-    private val _mostTrending = MutableLiveData<Result<Movie>>()
-    val mostTrending: LiveData<Result<Movie>> = _mostTrending
+    private val _mostTrending = MutableLiveData<Movie>()
+    val mostTrending: LiveData<Movie> = _mostTrending
 
-    private val _trending = MutableLiveData<Result<List<Movie>>>()
-    val trending: LiveData<Result<List<Movie>>> = _trending
-
-    private val _resultVideos = MutableLiveData<Result<List<Video>>>()
-    val resultVideos: LiveData<Result<List<Video>>> = _resultVideos
+    private val _trending = MutableLiveData<List<Movie>>()
+    val trending: LiveData<List<Movie>> = _trending
 
     private val _resultMovie = MutableLiveData<List<Movie>>()
     val resultMovie: LiveData<List<Movie>> = _resultMovie
@@ -29,42 +28,43 @@ class HomeViewModel(private val fetchMovieUseCase: FetchMovieUseCase): ViewModel
     private val _uiState = MutableLiveData<UiState>()
     val uiState: LiveData<UiState> = _uiState
 
+    private val _video = MutableLiveData<Video>()
+    val video: LiveData<Video> = _video
+
     private var currentPage = 1
-    private var isLastPage = false
 
     init {
         fetchTrendingMovie()
-        fetchMostTrendingMovie()
         fetchPopularMovies()
     }
 
     private fun fetchTrendingMovie() {
         viewModelScope.launch {
-            _trending.value = Result.Loading
-            _trending.value = fetchMovieUseCase.fetchTrendingMovies(1)
-        }
-    }
-
-    private fun fetchMostTrendingMovie() {
-        viewModelScope.launch {
-            _mostTrending.value = Result.Loading
-            _mostTrending.value = fetchMovieUseCase.fetchMostTrendingMovies(1)
+            _uiState.value = UiState.Loading
+            when(val result = fetchMovieUseCase.fetchTrendingMovies(currentPage)) {
+                is Result.Success -> {
+                    val movie = DataMapperMovie.mapResponsesToDomain(result.data.listMovie)
+                    _trending.value = movie
+                    _mostTrending.value = movie.firstOrNull()!!
+                }
+                is Result.Error -> {
+                    _uiState.value = UiState.Error(result.exception.message ?: "An unknown error occurred")
+                }
+                is Result.Loading -> {
+                    _uiState.value = UiState.Loading
+                }
+            }
         }
     }
 
     private fun fetchPopularMovies() {
-        if (isLastPage) {
-            _uiState.postValue(UiState.Success)
-            return
-        }
         viewModelScope.launch {
-            when(val result = fetchMovieUseCase.fetchPopularMovies(1)) {
+            _uiState.value = UiState.Loading
+            when(val result = fetchMovieUseCase.fetchPopularMovies(currentPage)) {
                 is Result.Success -> {
-                    val movies = _resultMovie.value.orEmpty() + result.data
-                    _resultMovie.postValue(movies)
+                    val movie = DataMapperMovie.mapResponsesToDomain(result.data.listMovie)
+                    _resultMovie.postValue(movie)
                     _uiState.postValue(UiState.Success)
-                    isLastPage = result.data.isEmpty()
-                    currentPage++
                 }
                 is Result.Error -> {
                     _uiState.value = UiState.Error(result.exception.message ?: "An unknown error occurred")
@@ -78,8 +78,25 @@ class HomeViewModel(private val fetchMovieUseCase: FetchMovieUseCase): ViewModel
 
     fun fetchMovieVideos(movieId: Int) {
         viewModelScope.launch {
-            _resultVideos.value = Result.Loading
-            _resultVideos.value = fetchMovieUseCase.fetchMovieVideos(movieId)
+            _uiState.value = UiState.Loading
+            when(val result = fetchMovieUseCase.fetchVideoByMovie(movieId)) {
+                is Result.Success -> {
+                    val videos = DataMapperVideo.mapResponsesToDomain(result.data.listVideo)
+                    val trailers = videos.filter {
+                        it.type == "Trailer"
+                    }
+                    if (trailers.isNotEmpty()) {
+                        _video.value = trailers[0]
+                    }
+                    _uiState.value = UiState.Success
+                }
+                is Result.Error -> {
+                    _uiState.value = UiState.Error(result.exception.message ?: "An unknown error occurred")
+                }
+                is Result.Loading -> {
+                    _uiState.value = UiState.Loading
+                }
+            }
         }
     }
 
