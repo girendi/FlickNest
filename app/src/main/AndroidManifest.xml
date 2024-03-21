@@ -32,8 +32,7 @@
             android:theme="@style/Theme.AppCompat.NoActionBar"/>
         <activity android:name="com.girendi.flicknest.presentation.detail.DetailMovieActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar"/>
-        <activity android:name="com.girendi.flicknest.presentation.MainActivity"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"/>
+        <activity android:name="com.girendi.flicknest.presentation.MainActivity" />
     </application>
 
 </manifest>

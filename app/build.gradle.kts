@@ -41,6 +41,7 @@ android {
         viewBinding = true
         dataBinding = true
     }
+    dynamicFeatures += setOf(":favorite")
 }
 
 dependencies {
@@ -52,6 +53,5 @@ dependencies {
     //UI
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01")
     implementation("com.github.qamarelsafadi:CurvedBottomNavigation:0.1.3")
-    implementation("com.github.bumptech.glide:glide:4.16.0")
-    annotationProcessor("com.github.bumptech.glide:compiler:4.13.0")
+    implementation("com.google.android.play:feature-delivery-ktx:2.1.0")
 }

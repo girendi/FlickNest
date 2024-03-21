@@ -1,7 +1,6 @@
 package com.girendi.flicknest.di
 
 import com.girendi.flicknest.presentation.detail.DetailMovieViewModel
-import com.girendi.flicknest.presentation.favorite.FavoriteViewModel
 import com.girendi.flicknest.presentation.genres.GenreViewModel
 import com.girendi.flicknest.presentation.home.HomeViewModel
 import com.girendi.flicknest.presentation.movie.ListMovieViewModel
@@ -13,5 +12,4 @@ val viewModelModule = module {
     viewModel { ListMovieViewModel(fetchMovieByFilterUseCase = get()) }
     viewModel { DetailMovieViewModel(fetchDetailMovieUseCase = get()) }
     viewModel { HomeViewModel(fetchMovieUseCase = get()) }
-    viewModel { FavoriteViewModel(fetchFavoriteUseCase = get()) }
 }

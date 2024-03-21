@@ -19,6 +19,8 @@ import com.girendi.flicknest.core.data.UiState
 import com.girendi.flicknest.core.databinding.ItemListMostPopularBinding
 import com.girendi.flicknest.presentation.detail.DetailMovieActivity
 import com.girendi.flicknest.presentation.movie.ListMovieActivity
+import com.google.android.play.core.splitinstall.SplitInstallManagerFactory
+import com.google.android.play.core.splitinstall.SplitInstallRequest
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class HomeFragment: Fragment() {
@@ -50,6 +52,38 @@ class HomeFragment: Fragment() {
         binding.tvSeeMoreMostPopular.setOnClickListener {
             handleClickSeeMore(resources.getString(R.string.most_populars))
         }
+        binding.ivFavorite.setOnClickListener {
+            try {
+                installFavoriteModule()
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(),
+                    getString(R.string.module_not_found), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun installFavoriteModule() {
+        val splitInstallManager = SplitInstallManagerFactory.create(requireContext())
+        val moduleFavorite = "favorite"
+        if (splitInstallManager.installedModules.contains(moduleFavorite)) {
+            moveToFavoriteActivity()
+        } else {
+            val request = SplitInstallRequest.newBuilder()
+                .addModule(moduleFavorite)
+                .build()
+            splitInstallManager.startInstall(request)
+                .addOnSuccessListener {
+                    moveToFavoriteActivity()
+                }
+                .addOnFailureListener {
+                    Toast.makeText(requireContext(),
+                        getString(R.string.error_installing_module), Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    private fun moveToFavoriteActivity() {
+        startActivity(Intent(requireContext(), Class.forName("com.girendi.flicknest.favorite.presentation.favorite.FavoriteActivity")))
     }
 
     private fun handleClickSeeMore(request: String) {
